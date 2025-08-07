@@ -9,6 +9,7 @@ namespace Sender
             Console.Title = "Sender";
 
             var endpointConfiguration = new EndpointConfiguration("Sender");
+            endpointConfiguration.UseSerialization<NewtonsoftJsonSerializer>();
 
             var transport = endpointConfiguration.UseTransport<SqlServerTransport>();
             transport.ConnectionString("Server=localhost\\SQLEXPRESS;Database=nserbdb;Trusted_Connection=True;TrustServerCertificate=True;");
@@ -33,13 +34,26 @@ namespace Sender
 
                 var jobAssigned = new JobAssigned
                 {
-                    JobId = Guid.NewGuid(),
+                    JobId = "jobid",
                     AssignedTo = "usman",
                     AssignedAt = DateTime.UtcNow
                 };
 
                 await endpointInstance.Send(jobAssigned);
                 Console.WriteLine($"Sent JobAssigned: {jobAssigned.JobId}");
+
+                // Optionally simulate job completed
+                await Task.Delay(2000); // 2 sec delay
+
+                var jobCompleted = new JobCompleted
+                {
+                    JobId = jobAssigned.JobId,
+                    CompletedAt = DateTime.UtcNow
+                };
+
+                var sendOptions = new SendOptions();
+                sendOptions.SetDestination("Receiver"); // <-- Set the target endpoint name
+                await endpointInstance.Send(jobCompleted, sendOptions);
             }
 
             await endpointInstance.Stop()

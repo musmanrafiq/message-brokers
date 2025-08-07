@@ -1,4 +1,6 @@
-﻿namespace ReceiverApp
+﻿using System.Data.SqlClient;
+
+namespace ReceiverApp
 {
     internal class Program
     {
@@ -7,9 +9,15 @@
             Console.Title = "Receiver";
 
             var endpointConfiguration = new EndpointConfiguration("Receiver");
+            endpointConfiguration.UseSerialization<NewtonsoftJsonSerializer>();
 
             var transport = endpointConfiguration.UseTransport<SqlServerTransport>();
             transport.ConnectionString("Server=localhost\\SQLEXPRESS;Database=nserbdb;Trusted_Connection=True;TrustServerCertificate=True;");
+
+            var persistence = endpointConfiguration.UsePersistence<SqlPersistence>();
+            persistence.SqlDialect<SqlDialect.MsSqlServer>();
+            persistence.ConnectionBuilder(() =>
+            new SqlConnection("Server=localhost\\SQLEXPRESS;Database=nserbdb;Trusted_Connection=True;TrustServerCertificate=True;"));
 
             // Optional but recommended for development
             endpointConfiguration.EnableInstallers();
